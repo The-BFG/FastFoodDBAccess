@@ -6,6 +6,7 @@
 package FastFoodManager;
 import java.sql.DriverManager;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 /**
@@ -24,15 +25,18 @@ public class FastFoodManager {
             Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/esami", "user", "pw" );
             Statement stmt = conn.createStatement();
             
+            String sql;
+            sql = "INSERT INTO STUDENTI VALUES(1, 'rossi', 'mario'),(2, 'bianchi', 'sergio')";
+            stmt.executeUpdate(sql);
             
+            sql = "SELECT * FROM STUDENTI";
+            ResultSet rs = stmt.executeQuery(sql);
             
+            rs.close();
             stmt.close();
             conn.close();
         }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        catch (SQLException e) {
+        catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
         
