@@ -1,0 +1,6 @@
+#!/bin/bash
+cd class
+echo "Launching the app..."
+java -cp ../lib/postgresql-42.1.1.jar:. FastFoodManager.FastFoodManager
+cd ..
+

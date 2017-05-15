@@ -22,7 +22,7 @@ public class FastFoodManager {
         try{
             Class.forName ("org.postgresql.Driver");
             // Load the Driver
-            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/esami", "user", "pw" );
+            Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/progetto_cristoni_guerzoni", "postgres", "algoritmi" );
             Statement stmt = conn.createStatement();
             
             String sql;
