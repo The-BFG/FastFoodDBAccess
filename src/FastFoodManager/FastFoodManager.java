@@ -52,7 +52,8 @@ public class FastFoodManager {
                 "2)Effettua un nuovo ordine per un dato cliente;\n"+
                 "3)Mostra il menu degli alimenti e il menu delle bevande di uno stabilimento;\n"+
                 "4) \n"+
-                "5) \n";
+                "5) \n"+
+                "0)Esci dal programma";
         Scanner in = new Scanner(System.in);
         
         //Trying loading driver to access postgresql database
@@ -82,28 +83,36 @@ public class FastFoodManager {
         }while(dbconn);
         
         //Query chooser;
+        Statement stmt = null;
+        ResultSet rs = null;
         int choosed;
         do{
             System.out.print(menu);
             choosed = in.nextInt();
-            String sql=readQuery(choosed);
+            String sql = readQuery(choosed);
             try{
-                Statement stmt = conn.createStatement();
+                stmt = conn.createStatement();
 
 
                 /*sql = "INSERT INTO STUDENTI VALUES(1, 'rossi', 'mario'),(2, 'bianchi', 'sergio')";
                 stmt.executeUpdate(sql);
 
                 sql = "SELECT * FROM STUDENTI";*/
-                ResultSet rs = stmt.executeQuery(sql);
+                rs = stmt.executeQuery(sql);
 
-                rs.close();
-                stmt.close();
-                conn.close();
+                
             }
             catch(SQLException e){
                 System.err.println(e.getMessage());
             }
         }while(choosed != 0);
+        try{
+            rs.close();
+            stmt.close();
+            conn.close();
+        }
+        catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
     }    
 }
