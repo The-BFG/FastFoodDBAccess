@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.CallableStatement;
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Scanner;
+
 /**
  *
  * @author giacomo daniele
@@ -71,7 +73,7 @@ public class FastFoodManager {
             BufferedReader buff;
             buff=new BufferedReader(new FileReader(file));
             String row = "";
-            System.out.println("--" + choosed.toString());
+            //System.out.println("--" + choosed.toString());
             
             while((row=buff.readLine()) != null ) {
                 if(row.contains("--" + choosed.toString())){
@@ -81,9 +83,10 @@ public class FastFoodManager {
                        query.add(row);
                        while(!row.contains(";")){
                            row = buff.readLine();
-                           query.set(query.size()-1, query.get(query.size()-1)+" "+row);
+                           query.set(query.size()-1, (query.get(query.size()-1)+" "+row));
+                           //System.out.println(row);
                        }
-                       System.out.println(query.get(query.size()-1));
+                       //System.out.println(query.get(query.size()-1));
                     }while(!row.contains("--"));
                 }
             }
@@ -159,10 +162,13 @@ public class FastFoodManager {
         //Menu;
         int choosedG;
         PreparedStatement ps = null;
-        Statement stmt;
+        Statement stmt = null;
+        CallableStatement cStmt = null;
+        ResultSet rs = null;
         String dir = System.getProperty("user.dir");
-        System.out.println(dir);
+        //System.out.println(dir);
         do{
+            System.out.println("\n");
             System.out.println(genericMenu);
             choosedG = in.nextInt();
             try{
@@ -176,7 +182,7 @@ public class FastFoodManager {
                         switch(choosedI){
                             case 1:
                                 query = readQuery(1, "../insert.sql");
-                                System.out.println(query.get(0)+"\n");
+                                //System.out.println(query.get(0)+"\n");
                                 ps = conn.prepareStatement(query.get(0));
                                 System.out.println("Inserisci il codice fiscale del nuovo cliente");
                                 String cf = in.nextLine();
@@ -192,16 +198,18 @@ public class FastFoodManager {
                                 ps.setString(5,in.nextLine());
                                 ps.executeUpdate();
 
-                                System.out.println(query.get(1)+"\n");
+                                //System.out.println(query.get(1)+"\n");
                                 ps = conn.prepareStatement(query.get(1));
                                 ps.setString(1,cf);
                                 System.out.println("Inserisci la mail del cliente:");
                                 ps.setString(2,in.nextLine());
                                 ps.setString(3,null);
                                 ps.executeUpdate();
+                                System.out.println("Inserimento avvenuto con successo.");
                                 break;
+                            case 2:
+                                
                         }
-
                         break;
                     case 2:
                         System.out.println(updateMenu);
@@ -210,13 +218,41 @@ public class FastFoodManager {
                             case 1:
                                 break;
                         }
-
                         break;
                     case 3:
                         System.out.println(queryMenu);
                         int choosedQ = in.nextInt();
                         switch(choosedQ){
                             case 1:
+                                query = readQuery(1, "../query.sql");
+                                stmt = conn.createStatement();
+                                System.out.println("Inserisci il nome dello stabilimento di cui vuoi visualizzare il menu scegliendo tra i seguenti:");
+                                rs = stmt.executeQuery(query.get(0));
+                                ArrayList<String> stabElenco = new ArrayList();
+                                while(rs.next()){
+                                    stabElenco.add(rs.getString(1));
+                                    System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
+                                }
+                                System.out.println("\nNome stabilimento scelto?");
+                                in.nextLine();
+                                ps = conn.prepareStatement(query.get(1));
+                                String stab = in.nextLine();
+                                if(stabElenco.contains(stab)){
+                                    ps.setString(1,stab);
+                                    rs = ps.executeQuery();
+                                    System.out.printf("\nListino cibi:\n%-30s %-30s\n","Nome cibo","Prezzo");
+                                    while(rs.next()){
+                                        System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getInt(2));
+                                    } 
+                                    ps = conn.prepareStatement(query.get(2));
+                                    ps.setString(1,stab);
+                                    rs = ps.executeQuery();                                
+                                    System.out.printf("\nListino bevande:\n%-30s %-30s\n","Nome bevanda","Prezzo");
+                                    while(rs.next()){
+                                        System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getInt(2));
+                                    }
+                                }else
+                                    System.out.println("\nNome stabilimento non presente in elenco, verificare di aver inserito il nome corretto(comprese maiuscole)");
                                 break;
                         }
                         break;
@@ -233,12 +269,17 @@ public class FastFoodManager {
                             stmt = conn.createStatement();
                 sql = "INSERT INTO STUDENTI VALUES(1, 'rossi', 'mario'),(2, 'bianchi', 'sergio')";
                 stmt.executeUpdate(sql); sql = "SELECT * FROM STUDENTI";
-                //rs = stmt.executeQuery(sql            }￼*/
+                //rs = stmt.executeQuery(sql            }￼
+            
+            cStmt = conn.prepareCall(query.get(1).replace(';', ' '));
+                                cStmt.setString(1, in.nextLine());
+                                rs = cStmt.executeQuery();*/
         }while(choosedG != 0);
         
         try{
-            //rs.close();
+            
             ps.close();
+            stmt.close();
             conn.close();
         }
         catch(SQLException e){
