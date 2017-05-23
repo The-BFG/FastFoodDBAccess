@@ -174,8 +174,121 @@ select S.nome,C.nome_cibo as alimento
         from stabilimento as S, listino_bevande as B
         where S.nome=B.nome_stabilimento;
 
+--TRIGGER--
 
+
+
+create or replace function controllo_disponibilita_stabilimento() returns trigger as $$
+declare
+	nuovoRuolo varchar(14);
+	postiDisponibili numeric(2,0);
+	postiOccupati numeric(2,0);
+	posto char(12);
+begin
 	
+	SELECT INTO nuovoRuolo ruolo FROM dipendente WHERE matricola=NEW.matricola;
+		
+	IF nuovoRuolo='cassiere' THEN
+		SELECT INTO postiDisponibili numero_casse FROM stabilimento WHERE nome=NEW.nome_stabilimento; END IF;
+	IF nuovoRuolo='inserviente' THEN 
+		SELECT INTO postiDisponibili numero_bagni FROM stabilimento WHERE nome=NEW.nome_stabilimento; END IF;
+	IF nuovoRuolo='cuoco' THEN 
+		SELECT INTO postiDisponibili numero_forni FROM stabilimento WHERE nome=NEW.nome_stabilimento; END IF;
+	
+	SELECT INTO postiOccupati count(*) FROM turno AS T,dipendente AS D
+	WHERE T.data=NEW.data AND T.Matricola=D.Matricola AND ruolo=nuovoRuolo; 
+	
+	IF postiOccupati>postiDisponibili THEN RAISE EXCEPTION 
+	'Lo stabilimento % in data % ha i posti per il ruolo % al completo',
+	NEW.nome_stabilimento,NEW.data,nuovoRuolo; END IF;
+return NEW;
+end
+$$language plpgsql;
+
+create trigger controllo_inserimento_turno
+after insert or update on turno 
+for each row execute procedure controllo_disponibilita_stabilimento();
+
+ -- PROCEDURE --
+ create or replace function menu(stab varchar(50)) returns void as $$
+begin        
+
+return select S.nome,C.nome_cibo as nome
+        from stabilimento as S, listino_cibo as C
+        where stab=C.nome_stabilimento
+        UNION
+        select S.nome,B.nome_bevanda as nome
+        from stabilimento as S, listino_bevande as B
+        where stab=B.nome_stabilimento;
+end;
+$$ LANGUAGE plpgsql;
+
+
+create or replace function ordine(CF char(16), nome_stab varchar(50), lista_cibo varchar(50)[],lista_bevande varchar(50)[]) returns void as $$
+declare
+	cod integer;
+begin
+	select into cod creazione_ordine(CF, nome_stab);
+	raise notice 'codice : %',cod;
+	FOR i IN 1..array_length(lista_cibo,1) BY 2 
+	LOOP
+		insert into cibo_ordine values(cod,now(),nome_stab,lista_cibo[i],lista_cibo[i+1]::INTEGER);
+	END LOOP;	
+
+	FOR i IN 1..array_length(lista_bevande,1) BY 2
+       
+	LOOP
+                insert into bevanda_ordine values(cod,now(),nome_stab,lista_bevande[i],lista_bevande[i+1]::INTEGER);
+        END LOOP;
+
+end;
+ $$ LANGUAGE plpgsql;
+ 
+ 
+ 
+ create or replace function creazione_ordine(CF char(16), nome_stab varchar(50)) returns Integer as $$
+declare
+	cod Integer;
+	oggi date;
+begin
+	oggi=now();
+
+	SELECT INTO cod MAX(O.codice) FROM ordine as O
+	WHERE O.data=oggi AND O.nome_stabilimento=nome_stab;
+	
+	IF cod IS NULL THEN cod=0; END IF;
+		
+	INSERT INTO ordine VALUES(oggi,cod+1,nome_stab,CF);
+-- il +1 garantisce l'ultimo codice inserito
+RETURN cod+1;
+end;
+ $$ LANGUAGE plpgsql;
+ 
+ 
+ 
+ CREATE OR REPLACE FUNCTION generazione_matricola() RETURNS char(6) AS $$ 
+DECLARE
+	matr INTEGER;
+BEGIN
+	SELECT INTO matr MAX(matricola)::INTEGER from dipendente;
+	IF matr IS NULL OR matr<100000 THEN matr=99999; END IF;
+
+RETURN (matr+1)::char(6); 
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION inserimento_dipendente(CF char(16), ruolo varchar(14),matricola_capo char(6)) RETURNS void AS $$
+DECLARE
+	matr char(6);
+	
+BEGIN
+	SELECT INTO matr generazione_matricola();
+	INSERT INTO dipendente VALUES(matr,CF,ruolo,matricola_capo);
+	
+END;
+$$ LANGUAGE plpgsql;
+
+
 --INSERT PERSONA--
 insert into persona values('RSSMRA78C04F257Z','Mario','Rossi','via Togliatti 4','Modena');
 insert into persona values('BRTLRT80M08F257B','Alberto','Berti','via Piave 4','Castelfranco Emilia');
@@ -203,7 +316,6 @@ insert into cibo values('spicy burgher');
 insert into cibo values('cheesburgher');
 insert into cibo values('hamburgher');
 
-
 --INSERT PRODOTTO--
 insert into prodotto values('coca cola');
 insert into prodotto values('fanta');
@@ -213,12 +325,6 @@ insert into prodotto values('acqua frizzante');
 insert into prodotto values('sprite');
 insert into prodotto values('the pesca');
 insert into prodotto values('the limone');
- -- TRIGGER
-
-
-
- -- PROCEDURE --
- 
 
 
 
