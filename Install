@@ -2,5 +2,5 @@
 echo "Crating class directory."
 mkdir -p class
 echo "Compiling the FastFoodManager and driver library for JDBC."
-javac -d class -cp "lib/*" -sourcepath src src/FastFoodManager/FastFoodManager.java
+javac -d class -cp "lib/*" -sourcepath src src/FastFoodManager/FastFoodManager.java -Xlint:unchecked
 echo -e "Installation completed.\n\nNow run './FastFood'."
