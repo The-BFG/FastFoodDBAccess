@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 package FastFoodManager;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -38,7 +37,9 @@ public class FastFoodManager {
                 "1)Mostra il menu degli alimenti e il menu delle bevande di uno stabilimento;\n"+
                 "2)Mostra storico degli ordini di un cliente in ordine cronologico;\n"+
                 "0)Torna al menu precedente.";
-
+        String cf,nome,cognome,indirizzo,citta,mail,codiceFedeltà;
+        int forni,bagni,casse;
+        
         //Database connection and check user data
         DBAccess access = new DBAccess();
         //Menu;
@@ -65,38 +66,56 @@ public class FastFoodManager {
                             case 1:
                                 System.out.println("Inserisci il codice fiscale del nuovo cliente");
                                 in.nextLine();
-                                String cf = in.nextLine();
+                                cf = in.nextLine();
                                 System.out.println("Inserisci il nome:");
-                                String nome = in.nextLine();
+                                nome = in.nextLine();
                                 System.out.println("Inserisci il cognome:");
-                                String cognome = in.nextLine();
+                                cognome = in.nextLine();
                                 System.out.println("Inserisci l'indirizzo di residenza:");
-                                String indirizzo = in.nextLine();
+                                indirizzo = in.nextLine();
                                 System.out.println("Inserisci la città di residenza:");
-                                String citta = in.nextLine();
+                                citta = in.nextLine();
                                 System.out.println("Inserisci la mail del cliente:");
-                                String mail = in.nextLine();
+                                mail = in.nextLine();
                                 
                                 access.insertPersona(cf, nome, cognome, indirizzo, citta);
                                 access.insertCliente(cf, mail);
                                 break;
                             case 2:
-                                String cliente = access.selectCliente();
+                                cf = access.selectCliente();
                                 String stab = access.selectStabilimento();
                                 ArrayList<String> elencoCibi = access.selectCibi(stab);
                                 ArrayList<String> elencoBevande = access.selectBevande(stab);
-                                if(access.insertOrdine(cliente, stab, elencoCibi, elencoBevande))
+                                if(access.insertOrdine(cf, stab, elencoCibi, elencoBevande))
                                     System.out.println("Inserimento avvenuto con successo.");
                                 else
                                     System.out.println("Inserimento non riuscito.");
                             case 3:
-
+                                    
                                 break;
                             case 4:
+                                cf = access.selectCliente();
+                                codiceFedeltà = access.insertCartaFedele(cf);
+                                System.out.println("Il numero della carta fedelta' è:\t" + codiceFedeltà);
                                 
                                 break;
                             case 5:
-                                
+                                System.out.println("Inserisci il nomedel nuovo stabilimento:");
+                                nome = in.nextLine();
+                                System.out.println("Inserisci la città:");
+                                citta = in.nextLine();
+                                System.out.println("Inserisci l'indirizzo:");
+                                indirizzo = in.nextLine();
+                                System.out.println("Inserisci il numero di forni:");
+                                forni = in.nextInt();
+                                System.out.println("Inserisci il numero di bagni:");
+                                bagni = in.nextInt();
+                                System.out.println("Inserisci il numero di casse:");
+                                casse = in.nextInt();
+                                if(access.insertStabilimento(nome,citta,indirizzo,forni,bagni,casse))
+                                    System.out.println("Inserimento avvenuto con successo.");
+                                else
+                                    System.out.println("Inserimento non avvenuto.");
                                 break;
                         }
                         break;

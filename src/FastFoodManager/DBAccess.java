@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -107,16 +108,45 @@ public class DBAccess {
             cStmt = conn.prepareCall("{call ordine(?,?,?,?)}");
             cStmt.setString(1,cf);
             cStmt.setString(2,stab);
-            //String[] cibi = new String[elencoCibi.size()];
-            //cibi = elencoCibi.toArray(cibi);
             cStmt.setArray(3, conn.createArrayOf("VARCHAR", elencoCibi.toArray()));
             cStmt.setArray(4, conn.createArrayOf("VARCHAR", elencoBevande.toArray()));
             cStmt.execute();
         }catch(SQLException e){
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             return false;
         }
         return true;
+    }
+    
+    public boolean insertStabilimento(String nome, String citta, String indirizzo, int forni, int bagni, int casse){
+        try{
+            ps = conn.prepareStatement("INSERT INTO stabilimento(nome,citta,indirizzo,numero_forni,numero_bagni,numero_casse)");
+            ps.setString(1,nome);
+            ps.setString(2,citta);
+            ps.setString(3,indirizzo);
+            ps.setInt(4,forni);
+            ps.setInt(5,bagni);
+            ps.setInt(6,casse);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+    
+    public String insertCartaFedele(String cf){
+        String carta = "";
+        try{
+            cStmt = conn.prepareCall("{? = call fedele(?)}");
+            cStmt.registerOutParameter(1,Types.CHAR); 
+            cStmt.setString(2,cf);
+            cStmt.execute();
+            carta = cStmt.getString(1);
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+        return carta;
     }
     
     public ArrayList<String> getListinoCibi(String stab){
@@ -211,7 +241,7 @@ public class DBAccess {
                     elencoClienti.add(rs.getString(1));
                     System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
                 }
-                System.out.println("\nInserisci il codice fiscale del cliente per la creazione del nuovo ordine:");
+                System.out.println("\nInserisci il codice fiscale del cliente:");
                 cliente= in.nextLine().toUpperCase();
                 if(!elencoClienti.contains(cliente))
                     System.out.println("\nCodice fiscale del cliente non esistente.\n");

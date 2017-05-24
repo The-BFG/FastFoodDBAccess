@@ -733,6 +733,36 @@ CREATE TRIGGER trigger_aggiornamento_kcal
 AFTER INSERT OR UPDATE on composizione_cibo
 FOR EACH ROW EXECUTE PROCEDURE aggiornamento_kcal();
 
+CREATE OR REPLACE FUNCTION fedele(codice_fiscale char(16)) RETURNS CHAR(6) AS $$
+DECLARE
+	codice CHAR(6);
+BEGIN
+	--prima di tutto controllo se il cliente possiede gia una carta fedelta
+	SELECT INTO codice numero_carta FROM cliente WHERE cf=codice_fiscale;
+	IF codice IS NOT NULL THEN
+
+		--questa e' la notifica che puoi cancellare... se lo fai cambia l'if in IF NULL THEN e togli l' ELSE
+		RAISE NOTICE'Il cliente con cf % possiede gia la carta fedelta numerata: %',codice_fiscale,codice;
+	
+	ELSE
+	SELECT INTO codice MAX(numero_carta) FROM cliente;
+	
+	IF codice IS NULL THEN codice='000000'; END IF;	
+
+	codice=(codice::smallint)+1;
+
+	--Formatto il codice in modo corretto
+	codice=lpad(codice, 6,'0');
+		
+
+	UPDATE cliente 
+	SET numero_carta=codice
+	WHERE cf=codice_fiscale;
+	END IF;
+RETURN codice;
+END
+$$ LANGUAGE plpgsql;
+
 
 insert into persona values('RSSMRA78C04F257Z','Mario','Rossi','via Togliatti 4','Modena');
 insert into persona values('BRTLRT80M08F257B','Alberto','Berti','via Piave 4','Castelfranco Emilia');
