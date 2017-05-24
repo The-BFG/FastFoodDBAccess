@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 package FastFoodManager;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -11,7 +13,6 @@ import java.util.Scanner;
  * @author giacomo daniele
  */
 public class FastFoodManager {
-
     /**
      * @param args the command line arguments
      */
@@ -80,14 +81,22 @@ public class FastFoodManager {
                                 access.insertCliente(cf, mail);
                                 break;
                             case 2:
-                                //execute ordine('GRZGCM95M10F257A','la Torre',{''});
-                                access.getClienti();
-                                break;
+                                String cliente = access.selectCliente();
+                                String stab = access.selectStabilimento();
+                                ArrayList<String> elencoCibi = access.selectCibi(stab);
+                                ArrayList<String> elencoBevande = access.selectBevande(stab);
+                                if(access.insertOrdine(cliente, stab, elencoCibi, elencoBevande))
+                                    System.out.println("Inserimento avvenuto con successo.");
+                                else
+                                    System.out.println("Inserimento non riuscito.");
                             case 3:
 
                                 break;
                             case 4:
-
+                                
+                                break;
+                            case 5:
+                                
                                 break;
                         }
                         break;
@@ -116,10 +125,6 @@ public class FastFoodManager {
                     default:
                         System.out.println("Opzione non valida.");
                 }
-            /*
-            cStmt = conn.prepareCall(query.get(1).replace(';', ' '));
-                                cStmt.setString(1, in.nextLine());
-                                rs = cStmt.executeQuery();*/
             }while(choosedG != 0);
         }
         else
