@@ -31,13 +31,14 @@ public class FastFoodManager {
                 "0)Torna al menu precedente.";
         String updateMenu = "Inserisci il numero dell'operazione di aggiornamento da eseguire:\n"+
                 "1)Aggiorna il prezzo di un prodotto venduto da un determinato fornitore;\n"+
-                "2)Aggiorna il prezzo di un alimento presente nel menu di uno stabilimento;\n"+
+                "2)Aggiorna il prezzo di un cibo presente nel menu di uno stabilimento;\n"+
+                "3)Aggiorna il prezzo di una bevanda presente nel menu di uno stabilimento;\n"+
                 "0)Tornaal menu precedente.";
         String queryMenu = "Inserisci il numero dell'operazione di visualizzazione da eseguire:\n"+
                 "1)Mostra il menu degli alimenti e il menu delle bevande di uno stabilimento;\n"+
                 "2)Mostra storico degli ordini di un cliente in ordine cronologico;\n"+
                 "0)Torna al menu precedente.";
-        String cf,nome,cognome,indirizzo,citta,mail,codiceFedeltà;
+        String cf,nome,cognome,indirizzo,citta,mail,codiceFedeltà,fornitore,stab;
         int forni,bagni,casse;
         
         //Database connection and check user data
@@ -83,24 +84,31 @@ public class FastFoodManager {
                                 break;
                             case 2:
                                 cf = access.selectCliente();
-                                String stab = access.selectStabilimento();
+                                stab = access.selectStabilimento();
                                 ArrayList<String> elencoCibi = access.selectCibi(stab);
                                 ArrayList<String> elencoBevande = access.selectBevande(stab);
                                 if(access.insertOrdine(cf, stab, elencoCibi, elencoBevande))
                                     System.out.println("Inserimento avvenuto con successo.");
                                 else
                                     System.out.println("Inserimento non riuscito.");
+                                break;
                             case 3:
-                                    
+                                stab = access.selectStabilimento();
+                                fornitore = access.selectFornitore();
+                                ArrayList<String> elencoProdotti = access.selectProdotti(fornitore);
+                                if(access.insertFornitura(stab,fornitore,elencoProdotti))
+                                    System.out.println("Inserimento avvenuto con successo.");
+                                else
+                                    System.out.println("Inserimento non riuscito.");
                                 break;
                             case 4:
                                 cf = access.selectCliente();
                                 codiceFedeltà = access.insertCartaFedele(cf);
                                 System.out.println("Il numero della carta fedelta' è:\t" + codiceFedeltà);
-                                
                                 break;
                             case 5:
-                                System.out.println("Inserisci il nomedel nuovo stabilimento:");
+                                System.out.println("Inserisci il nome del nuovo stabilimento:");
+                                in.nextLine();
                                 nome = in.nextLine();
                                 System.out.println("Inserisci la città:");
                                 citta = in.nextLine();
@@ -124,6 +132,29 @@ public class FastFoodManager {
                         int choosedU = in.nextInt();
                         switch(choosedU){
                             case 1:
+                                fornitore = access.selectFornitore();
+                                String prodotto = access.selectProdotto(fornitore);
+                                if(access.updateInventarioFornitore(fornitore,prodotto))
+                                    System.out.println("Aggiornamento avvenuto con successo.");
+                                else
+                                    System.out.println("Aggiornamento non avvenuto.");
+                                break;
+                            case 2:
+                                in.nextLine();
+                                stab = access.selectStabilimento();
+                                String cibo = access.selectCibo(stab);
+                                if(access.updateListinoCibi(stab,cibo))
+                                    System.out.println("Aggiornamento avvenuto con successo.");
+                                else
+                                    System.out.println("Aggiornamento non avvenuto.");
+                                break;
+                            case 3:
+                                stab = access.selectStabilimento();
+                                String bevanda = access.selectBevanda(stab);
+                                if(access.updateListinoBevande(stab,bevanda))
+                                    System.out.println("Aggiornamento avvenuto con successo.");
+                                else
+                                    System.out.println("Aggiornamento non avvenuto.");
                                 break;
                         }
                         break;
@@ -132,12 +163,13 @@ public class FastFoodManager {
                         int choosedQ = in.nextInt();
                         switch(choosedQ){
                             case 1:
-                                String stab = access.selectStabilimento();
+                                stab = access.selectStabilimento();
                                 access.getListinoCibi(stab);
                                 access.getListinoBevande(stab);
                                 break;
                             case 2:
-
+                                cf = access.selectCliente();
+                                access.showClientHistory(cf);
                                 break;
                         }
                         break;

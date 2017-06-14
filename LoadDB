@@ -1,4 +1,4 @@
 #!/bin/bash
-createdb progetto_cristoni_guerzoni
-psql -f FastFood.sql progetto_cristoni_guerzoni
-echo -e "\n\nDatabase caricato correttamente."
+createdb db_cristoni_guerzoni
+psql -f FastFood.sql db_cristoni_guerzoni
+echo -e "\n\nDatabase: 'db_cristoni_guerzoni' caricato correttamente."

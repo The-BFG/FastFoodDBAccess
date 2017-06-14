@@ -624,7 +624,7 @@ BEGIN
 		quantita=lista_prodotti[i+1]::SMALLINT;
 		SELECT INTO spesa costo*quantita FROM inventario_fornitore WHERE p_iva=piva_fornitore;
                 INSERT INTO rifornimento VALUES(now(),nome_stabilimento,piva_fornitore,lista_prodotti[i],
-					     quantita,spesa,lista_prodotti[i+2]::date);
+					     quantita,spesa,lista_prodotti[i+2]::DATE);
         	END IF;
 	END LOOP;
 

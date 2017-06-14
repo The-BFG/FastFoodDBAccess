@@ -37,12 +37,13 @@ public class DBAccess {
             System.err.println(e.getMessage());
         }  
         do{
+            dbconn = true;
             try{
                 System.out.println("Inserisci il nome utente amministratore postgres:");
                 String user = in.nextLine();
                 System.out.println("Inserisci la password utente:");
                 String psw = in.nextLine();
-                conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/progetto_cristoni_guerzoni", user, psw);
+                conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/db_cristoni_guerzoni", user, psw);
             }catch(SQLException e){
                 dbconn = false;
                 System.out.println("Errore di accesso al database\nVerificare che i dati di accesso siano corretti.\n");
@@ -120,7 +121,7 @@ public class DBAccess {
     
     public boolean insertStabilimento(String nome, String citta, String indirizzo, int forni, int bagni, int casse){
         try{
-            ps = conn.prepareStatement("INSERT INTO stabilimento(nome,citta,indirizzo,numero_forni,numero_bagni,numero_casse)");
+            ps = conn.prepareStatement("INSERT INTO stabilimento(nome,citta,indirizzo,numero_forni,numero_bagni,numero_casse) VALUES (?,?,?,?,?,?)");
             ps.setString(1,nome);
             ps.setString(2,citta);
             ps.setString(3,indirizzo);
@@ -149,6 +150,62 @@ public class DBAccess {
         return carta;
     }
     
+    public boolean insertFornitura(String stab, String fornitore, ArrayList<String> elencoProdotti){
+        try{
+            cStmt = conn.prepareCall("{call fornitura(?,?,?)}");
+            cStmt.setString(1,stab);
+            cStmt.setString(2,fornitore);
+            cStmt.setArray(3, conn.createArrayOf("VARCHAR", elencoProdotti.toArray()));
+            cStmt.execute();
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+    
+    public boolean updateListinoCibi(String stab, String cibo){
+        try{
+            ps = conn.prepareStatement("UPDATE listino_cibo SET prezzo = ? WHERE nome_cibo = ? and nome_stabilimento = ?;");
+            ps.setFloat(1,nuovoPrezzo(cibo));
+            ps.setString(2,cibo);
+            ps.setString(3,stab);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+    
+    public boolean updateListinoBevande(String stab, String bevanda){
+        try{
+            ps = conn.prepareStatement("UPDATE listino_bevande SET prezzo = ? WHERE nome_bevanda = ? and nome_stabilimento = ?;");
+            ps.setFloat(1,nuovoPrezzo(bevanda));
+            ps.setString(2,bevanda);
+            ps.setString(3,stab);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+    
+    public boolean updateInventarioFornitore(String fornitore, String prodotto){
+        try{
+            ps = conn.prepareStatement("UPDATE inventario_fornitore SET costo = ? WHERE p_iva = ? and nome_prodotto = ?;");
+            ps.setFloat(1,nuovoPrezzo(prodotto));
+            ps.setString(2,fornitore);
+            ps.setString(3,prodotto);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+    
     public ArrayList<String> getListinoCibi(String stab){
         ArrayList<String> elencoCibi = new ArrayList<String>();
         try{
@@ -160,7 +217,7 @@ public class DBAccess {
             System.out.printf("\nListino cibi per lo stabilimento %s:\n%-30s %-30s\n\n",stab,"NOME CIBO","PREZZO");
             while(rs.next()){
                 elencoCibi.add(rs.getString(1));
-                System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getInt(2));
+                System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getFloat(2));
             }
         }catch(SQLException e){
             System.err.println(e.getMessage());
@@ -179,12 +236,119 @@ public class DBAccess {
             System.out.printf("\nListino bevande per lo stabilimento %s:\n%-30s %-30s\n\n",stab,"NOME BEVANDA","PREZZO");
             while(rs.next()){
                 elencoBevande.add(rs.getString(1));
-                System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getInt(2));
+                System.out.printf("%-30s %-30s\n",rs.getString(1),  rs.getFloat(2));
             }
         }catch(SQLException e){
             System.err.println(e.getMessage());
         }
         return elencoBevande;
+    }
+    
+    public ArrayList<String> getFornitori(){
+        ArrayList<String> elencoFornitori = new ArrayList<String>();
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT p_iva, nome_ditta, citta, indirizzo  FROM fornitore;");
+            System.out.printf("\nElenco dei fornitori:\n%-30s %-30s %-30s %-30s\n\n","PARTITA IVA","NOME DITTA","CITTA'","INDIRIZZO");
+            while(rs.next()){
+                elencoFornitori.add(rs.getString(1));
+                System.out.printf("%-30s %-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4));
+            }
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+        return elencoFornitori;
+    }
+    
+    public ArrayList<String> getProdotti(String fornitore){
+        ArrayList<String> elencoProdotti = new ArrayList<String>();
+        try{
+            ps = conn.prepareStatement("SELECT p.nome, i.costo "+
+                                        "FROM prodotto AS p, inventario_fornitore AS i "+
+                                        "WHERE p.nome = i.nome_prodotto AND i.p_iva=?;");
+            ps.setString(1,fornitore);
+            rs = ps.executeQuery();                                
+            System.out.printf("\nElenco prodotti venduti da %s:\n%-30s %-30s\n\n",fornitore,"NOME PRODOTTO","PREZZO");
+            while(rs.next()){
+                elencoProdotti.add(rs.getString(1));
+                System.out.printf("%-30s %-30s\n",rs.getString(1), rs.getFloat(2));
+            }
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+        return elencoProdotti;
+    }
+    
+    public void showClientHistory(String cf){
+        try{
+            ps = conn.prepareStatement("select data,codice,nome_stabilimento,alimento,quantita "
+                    + "from ("
+                        + "(select o.cf,o.data,o.codice,o.nome_stabilimento,b.nome_bevanda as alimento,b.quantita "
+                        + "from ordine as o, bevanda_ordine as b order by o.data,o.codice,nome_bevanda) "
+                        + "union "
+                        + "(select o.cf,o.data,o.codice,o.nome_stabilimento,c.nome_cibo as alimento,c.quantita "
+                        + "from ordine as o, cibo_ordine as c order by o.data,o.codice,c.nome_cibo )"
+                    + ") as t where cf = ?  ORDER BY alimento;");
+            ps.setString(1,cf);
+            rs = ps.executeQuery();
+            System.out.println("\nElenco ordini del cliente con codice fiscale "+ cf +" :");
+            System.out.printf("%-12s %-10s %-20s %-20s %-10s\n\n","DATA","SCONTRINO","STABILIMENTO","ALIMENTO","QUANTITÀ");
+            while(rs.next()){
+                System.out.printf("%-12s %-10s %-20s %-20s %-10s\n",rs.getString(1), rs.getString(2),rs.getString(3),rs.getString(4),rs.getInt(5));
+            }
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+    }
+    
+    public ArrayList<String> selectProdotti(String fornitore){
+        ArrayList<String> elencoProdotti;
+        ArrayList<String> elencoScelti = new ArrayList<String>();
+        String prodotto;
+        do{
+            elencoProdotti = getProdotti(fornitore);
+            System.out.println("\nInserisci il nome dei prodotti che vuoi aggiungere alla fornitura scegliendo tra quelli sopra indicati:\n"+
+                                "Inserisci 0 quando hai terminato le scelte.");
+            prodotto = in.nextLine();
+            if(elencoProdotti.contains(prodotto)){
+                elencoScelti.add(prodotto);
+                System.out.println("Quantità di " + prodotto + " che desidera ordinare?(Inserisci un numero da 1 a 100)");
+                Integer qt = in.nextInt();
+                elencoScelti.add(qt.toString());
+                String scadenza = setScadenzaProdotto();
+                System.out.println(scadenza);
+                elencoScelti.add(scadenza);
+            }
+            else if(!"0".equals(prodotto))
+                System.out.println("\nBevanda scelta non disponibile in questo stabilimento.\n");
+        }while((!elencoProdotti.contains(prodotto) || !"0".equals(prodotto)) && !"0".equals(prodotto) );
+        return elencoScelti;
+    }
+    
+    public String selectFornitore(){
+        String piva;
+        ArrayList<String> elencoFornitori;
+        do{
+            elencoFornitori = getFornitori();
+            System.out.println("\nIscerisci la partita iva del fornitore che vuoi scegliere:");
+            piva = in.nextLine();
+            if(!elencoFornitori.contains(piva))
+                System.out.println("Partita iva non presente in elenco.");
+        }while(!elencoFornitori.contains(piva));
+        return piva;
+    }
+    
+    public String selectProdotto(String stab){
+        String prodotto;
+        ArrayList<String> elencoProdotti;
+        do{
+            elencoProdotti = getProdotti(stab);
+            System.out.println("\nInserisci il nome del prodotto di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
+            prodotto = in.nextLine();
+            if(!elencoProdotti.contains(prodotto))
+                System.out.println("\nProdotto scelto non disponibile presso questo fornitore.\n");
+        }while(!elencoProdotti.contains(prodotto));
+        return prodotto;
     }
     
      public ArrayList<String> selectCibi(String stab){
@@ -206,6 +370,32 @@ public class DBAccess {
                 System.out.println("\nCibo scelto non disponibile in questo stabilimento.\n");
         }while((!elencoCibi.contains(cibo) || !"0".equals(cibo)) && !"0".equals(cibo) );
         return elencoScelte;
+    }
+    
+    public String selectCibo(String stab){
+        String cibo;
+        ArrayList<String> elencoCibi;
+        do{
+            elencoCibi = getListinoCibi(stab);
+            System.out.println("\nInserisci il nome del cibo di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
+            cibo = in.nextLine();
+            if(!elencoCibi.contains(cibo))
+                System.out.println("\nCibo scelto non disponibile in questo stabilimento.\n");
+        }while(!elencoCibi.contains(cibo));
+        return cibo;
+    }
+    
+    public String selectBevanda(String stab){
+        String bevanda;
+        ArrayList<String> elencoBevande;
+        do{
+            elencoBevande = getListinoBevande(stab);
+            System.out.println("\nInserisci il nome della bevanda di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
+            bevanda = in.nextLine();
+            if(!elencoBevande.contains(bevanda))
+                System.out.println("\nBevanda scelta non disponibile in questo stabilimento.\n");
+        }while(!elencoBevande.contains(bevanda));
+        return bevanda;
     }
     
     public ArrayList<String> selectBevande(String stab){
@@ -235,7 +425,7 @@ public class DBAccess {
         do{
             try{
                 stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT cf,nome,cognome FROM persona ORDER BY cognome");
+                rs = stmt.executeQuery("SELECT p.cf,p.nome,p.cognome FROM persona as p,cliente as c WHERE p.cf=c.cf ORDER BY p.cognome");
                 System.out.printf("\nElenco di tutti i clienti :\n%-30s %-30s %-30s\n\n","CODICE FISCALE","NOME","COGNOME");
                 while(rs.next()){
                     elencoClienti.add(rs.getString(1));
@@ -258,8 +448,8 @@ public class DBAccess {
         do{
             try{
                 stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT nome, citta, indirizzo FROM stabilimento;");
-                System.out.println("Inserisci il nome dello stabilimento di cui vuoi visualizzare il menu scegliendo tra i seguenti:");
+                rs = stmt.executeQuery("SELECT nome, citta, indirizzo FROM stabilimento ORDER BY nome;");
+                System.out.println("Inserisci il nome dello stabilimento che vuoi scegliere tra i seguenti:");
                 System.out.printf("%-30s %-30s %-30s\n\n", "NOME STABILIMENTO","CITTA'","INDIRIZZO");
                 while(rs.next()){
                     stabElenco.add(rs.getString(1));
@@ -275,5 +465,22 @@ public class DBAccess {
             }
         }while(!stabElenco.contains(stab));
         return stab;
+    }
+    
+    public String setScadenzaProdotto(){
+        String date = "";
+        in.nextLine();
+        System.out.println("Inserisci l'anno di scadenza(yyyy):");
+        date += in.nextLine()+"-";
+        System.out.println("Inserisci il mese di scadenza(MM):");
+        date += in.nextLine()+"-";
+        System.out.println("Inserisci il giorno di scadenza(gg):");
+        date += in.nextLine();
+        return date;
+    }
+    
+    public Float nuovoPrezzo(String alimento){
+        System.out.println("Inserisci il prezzo di: "+ alimento);
+        return in.nextFloat();
     }
 }
