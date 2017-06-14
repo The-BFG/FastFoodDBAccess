@@ -79,8 +79,8 @@ public class FastFoodManager {
                                 System.out.println("Inserisci la mail del cliente:");
                                 mail = in.nextLine();
                                 
-                                access.insertPersona(cf, nome, cognome, indirizzo, citta);
-                                access.insertCliente(cf, mail);
+                                access.insertPersona(cf.toUpperCase(), nome, cognome, indirizzo, citta);
+                                access.insertCliente(cf.toUpperCase(), mail);
                                 break;
                             case 2:
                                 cf = access.selectCliente();
@@ -177,6 +177,7 @@ public class FastFoodManager {
                         System.out.println("Opzione non valida.");
                 }
             }while(choosedG != 0);
+            access.closeConnection();
         }
         else
             System.out.println("Errore di accesso al Database.");

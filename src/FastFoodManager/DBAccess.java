@@ -14,8 +14,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Scanner;
-
+import java.util.Calendar;;
 /**
  *
  * @author giacomo daniele
@@ -98,6 +99,7 @@ public class DBAccess {
             ps.executeUpdate();
         }catch(SQLException e){
             System.out.println("Inserimento del cliente non avvenuto.");
+            System.out.println(e.getMessage());
             return false;
         }
         System.out.println("Inserimento del cliente avvenuto con successo.");
@@ -320,7 +322,7 @@ public class DBAccess {
                 elencoScelti.add(scadenza);
             }
             else if(!"0".equals(prodotto))
-                System.out.println("\nBevanda scelta non disponibile in questo stabilimento.\n");
+                System.out.println("\nProdotto scelta non disponibile in questo stabilimento.\n");
         }while((!elencoProdotti.contains(prodotto) || !"0".equals(prodotto)) && !"0".equals(prodotto) );
         return elencoScelti;
     }
@@ -468,14 +470,45 @@ public class DBAccess {
     }
     
     public String setScadenzaProdotto(){
-        String date = "";
+        String date ="";
+        Boolean valDate =true;
+        String yyyy, MM, gg;
+        Calendar today = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance();
         in.nextLine();
-        System.out.println("Inserisci l'anno di scadenza(yyyy):");
-        date += in.nextLine()+"-";
-        System.out.println("Inserisci il mese di scadenza(MM):");
-        date += in.nextLine()+"-";
-        System.out.println("Inserisci il giorno di scadenza(gg):");
-        date += in.nextLine();
+        do{
+            try{
+                date = "";
+                valDate = true;
+                System.out.println("Inserisci l'anno di scadenza(yyyy):");
+                yyyy = in.nextLine();
+                date += yyyy+"-";
+                cal.set(Calendar.YEAR, Integer.parseInt(yyyy));
+                System.out.println("Inserisci il mese di scadenza(MM):");
+                MM = in.nextLine();
+                date += MM+"-";
+                cal.set(Calendar.MONTH, Integer.parseInt(MM));
+                System.out.println("Inserisci il giorno di scadenza(gg):");
+                gg = in.nextLine();
+                date += gg;
+                cal.set(Calendar.DAY_OF_MONTH, Integer.parseInt(gg));
+
+                try{
+                    cal.getTime();
+                }catch(Exception e){
+                    valDate = false;
+                    System.out.println("Data inserita non corretta");
+                }
+                //if(!(today.get(Calendar.YEAR)<= Integer.parseInt(yyyy) && today.get(Calendar.MONTH)<= Integer.parseInt(MM) && today.get(Calendar.DAY_OF_MONTH)< Integer.parseInt(gg))){
+                if(today.after(cal)){
+                    valDate = false;
+                    System.out.println("La data di scadenza deve essere più grande della data odierna.");
+                }
+            }catch(NumberFormatException nf){
+                valDate = false;
+                System.out.println("Valore inserito non corretto per una data.");
+            }
+        }while(valDate==false);
         return date;
     }
     
