@@ -280,11 +280,24 @@ public class DBAccess {
         }
         return elencoProdotti;
     }
-    
+
+   /* public void showLastMonthClient(){
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT p.cf,p.nome,p.cognome FROM persona as p,cliente as c WHERE p.cf=c.cf ORDER BY p.cognome");
+            System.out.printf("\nElenco di tutti i clienti :\n%-30s %-30s %-30s\n\n","CODICE FISCALE","NOME","COGNOME");
+            while(rs.next()){
+                elencoClienti.add(rs.getString(1));
+                System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
+            }
+        }catch(SQLException e){
+            System.ou
+        }
+    } */   
     public void showClientHistory(String cf){
         try{
             ps = conn.prepareStatement("select data,codice,nome_stabilimento,alimento,quantita "
-                    + "from ("
+                    + "from ("  
                         + "(select o.cf,o.data,o.codice,o.nome_stabilimento,b.nome_bevanda as alimento,b.quantita "
                         + "from ordine as o, bevanda_ordine as b order by o.data,o.codice,nome_bevanda) "
                         + "union "
