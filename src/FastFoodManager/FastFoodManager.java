@@ -37,6 +37,7 @@ public class FastFoodManager {
         String queryMenu = "Inserisci il numero dell'operazione di visualizzazione da eseguire:\n"+
                 "1)Mostra il menu degli alimenti e il menu delle bevande di uno stabilimento;\n"+
                 "2)Mostra storico degli ordini di un cliente in ordine cronologico;\n"+
+                "3)Mostra il numero degli ordini per cliente dell'ultimo anno"+
                 "0)Torna al menu precedente.";
         String cf,nome,cognome,indirizzo,citta,mail,codiceFedeltà,fornitore,stab;
         int forni,bagni,casse;
@@ -68,18 +69,19 @@ public class FastFoodManager {
                                 System.out.println("Inserisci il codice fiscale del nuovo cliente");
                                 in.nextLine();
                                 cf = in.nextLine();
-                                System.out.println("Inserisci il nome:");
-                                nome = in.nextLine();
-                                System.out.println("Inserisci il cognome:");
-                                cognome = in.nextLine();
-                                System.out.println("Inserisci l'indirizzo di residenza:");
-                                indirizzo = in.nextLine();
-                                System.out.println("Inserisci la città di residenza:");
-                                citta = in.nextLine();
+                                if(!access.getPersoneCF().contains(cf)){
+                                    System.out.println("Inserisci il nome:");
+                                    nome = in.nextLine();
+                                    System.out.println("Inserisci il cognome:");
+                                    cognome = in.nextLine();
+                                    System.out.println("Inserisci l'indirizzo di residenza:");
+                                    indirizzo = in.nextLine();
+                                    System.out.println("Inserisci la città di residenza:");
+                                    citta = in.nextLine();
+                                    access.insertPersona(cf.toUpperCase(), nome, cognome, indirizzo, citta);
+                                }
                                 System.out.println("Inserisci la mail del cliente:");
                                 mail = in.nextLine();
-                                
-                                access.insertPersona(cf.toUpperCase(), nome, cognome, indirizzo, citta);
                                 access.insertCliente(cf.toUpperCase(), mail);
                                 break;
                             case 2:

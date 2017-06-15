@@ -245,7 +245,7 @@ public class DBAccess {
         }
         return elencoBevande;
     }
-    
+
     public ArrayList<String> getFornitori(){
         ArrayList<String> elencoFornitori = new ArrayList<String>();
         try{
@@ -433,25 +433,44 @@ public class DBAccess {
         return elencoScelte;
     }
     
+    public ArrayList<String> getPersoneCF(){
+        ArrayList<String> elencoCF = new ArrayList<String>();
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT cf FROM persona  ORDER BY cf");
+            while(rs.next())
+                elencoCF.add(rs.getString(1));
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+        return elencoCF;
+    }
+
+    public ArrayList<String> getClienti(){
+        ArrayList<String> elencoClienti = new ArrayList<String>();
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT p.cf,p.nome,p.cognome FROM persona as p,cliente as c WHERE p.cf=c.cf ORDER BY p.cognome");
+            System.out.printf("\nElenco di tutti i clienti :\n%-30s %-30s %-30s\n\n","CODICE FISCALE","NOME","COGNOME");
+            while(rs.next()){
+                elencoClienti.add(rs.getString(1));
+                System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
+            }
+        }catch(SQLException e){
+            System.err.println(e.getMessage());
+        }
+        return elencoClienti;
+    }
+
     public String selectCliente(){
         ArrayList<String> elencoClienti = new ArrayList<String>();
         String cliente = "";
         do{
-            try{
-                stmt = conn.createStatement();
-                rs = stmt.executeQuery("SELECT p.cf,p.nome,p.cognome FROM persona as p,cliente as c WHERE p.cf=c.cf ORDER BY p.cognome");
-                System.out.printf("\nElenco di tutti i clienti :\n%-30s %-30s %-30s\n\n","CODICE FISCALE","NOME","COGNOME");
-                while(rs.next()){
-                    elencoClienti.add(rs.getString(1));
-                    System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
-                }
-                System.out.println("\nInserisci il codice fiscale del cliente:");
-                cliente= in.nextLine().toUpperCase();
-                if(!elencoClienti.contains(cliente))
-                    System.out.println("\nCodice fiscale del cliente non esistente.\n");
-            }catch(SQLException e){
-                System.err.println(e.getMessage());
-            }
+            elencoClienti = getClienti();
+            System.out.println("\nInserisci il codice fiscale del cliente:");
+            cliente= in.nextLine().toUpperCase();
+            if(!elencoClienti.contains(cliente))
+                System.out.println("\nCodice fiscale del cliente non esistente.\n");
         }while(!elencoClienti.contains(cliente));
         return cliente;
     }
