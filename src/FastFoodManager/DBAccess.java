@@ -281,19 +281,18 @@ public class DBAccess {
         return elencoProdotti;
     }
 
-   /* public void showLastMonthClient(){
+     public void showLastYearClient(){
         try{
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT p.cf,p.nome,p.cognome FROM persona as p,cliente as c WHERE p.cf=c.cf ORDER BY p.cognome");
-            System.out.printf("\nElenco di tutti i clienti :\n%-30s %-30s %-30s\n\n","CODICE FISCALE","NOME","COGNOME");
+            rs = stmt.executeQuery("select p.cf, p.nome, p.cognome, count(*) as numero_ordini from ordine o, persona p where o.cf=p.cf and extract(year from data) = extract(year from current_date ) group by p.cf order by numero_ordini desc;");
+            System.out.printf("\nTotale ordini dei clienti dell'ultimo anno:\n%-20s %-20s %-20s %-20s\n\n","CODICE FISCALE","NOME","COGNOME","NUMERO ORDINI");
             while(rs.next()){
-                elencoClienti.add(rs.getString(1));
-                System.out.printf("%-30s %-30s %-30s\n",rs.getString(1), rs.getString(2), rs.getString(3));
+                System.out.printf("%-20s %-20s %-20s %-20s\n",rs.getString(1), rs.getString(2), rs.getString(3), rs.getInt(4));
             }
         }catch(SQLException e){
-            System.ou
+            System.err.println(e);
         }
-    } */   
+    } 
     public void showClientHistory(String cf){
         try{
             ps = conn.prepareStatement("select data,codice,nome_stabilimento,alimento,quantita "

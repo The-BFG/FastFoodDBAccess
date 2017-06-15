@@ -171,6 +171,9 @@ public class FastFoodManager {
                                 cf = access.selectCliente();
                                 access.showClientHistory(cf);
                                 break;
+                            case 3:
+                                access.showLastYearClient();
+                                break;
                         }
                         break;
                     default:
