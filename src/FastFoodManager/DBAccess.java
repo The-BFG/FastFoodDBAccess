@@ -167,6 +167,8 @@ public class DBAccess {
     }
     
     public boolean updateListinoCibi(String stab, String cibo){
+        if(cibo == "")
+            return false;
         try{
             ps = conn.prepareStatement("UPDATE listino_cibo SET prezzo = ? WHERE nome_cibo = ? and nome_stabilimento = ?;");
             ps.setFloat(1,nuovoPrezzo(cibo));
@@ -181,6 +183,8 @@ public class DBAccess {
     }
     
     public boolean updateListinoBevande(String stab, String bevanda){
+        if(bevanda == "")
+            return false;
         try{
             ps = conn.prepareStatement("UPDATE listino_bevande SET prezzo = ? WHERE nome_bevanda = ? and nome_stabilimento = ?;");
             ps.setFloat(1,nuovoPrezzo(bevanda));
@@ -387,27 +391,37 @@ public class DBAccess {
     }
     
     public String selectCibo(String stab){
-        String cibo;
+        String cibo="";
         ArrayList<String> elencoCibi;
         do{
             elencoCibi = getListinoCibi(stab);
-            System.out.println("\nInserisci il nome del cibo di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
-            cibo = in.nextLine();
-            if(!elencoCibi.contains(cibo))
-                System.out.println("\nCibo scelto non disponibile in questo stabilimento.\n");
+            if(!elencoCibi.isEmpty()){
+                System.out.println("\nInserisci il nome del cibo di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
+                cibo = in.nextLine();
+                if(!elencoCibi.contains(cibo))
+                    System.out.println("\nCibo scelto non disponibile in questo stabilimento.\n");
+            }else{
+                System.out.println("In questo stabilimento non sono ancora presenti dei cibi.");
+                break;
+            }
         }while(!elencoCibi.contains(cibo));
         return cibo;
     }
     
     public String selectBevanda(String stab){
-        String bevanda;
+        String bevanda="";
         ArrayList<String> elencoBevande;
         do{
             elencoBevande = getListinoBevande(stab);
-            System.out.println("\nInserisci il nome della bevanda di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
-            bevanda = in.nextLine();
-            if(!elencoBevande.contains(bevanda))
-                System.out.println("\nBevanda scelta non disponibile in questo stabilimento.\n");
+            if(!elencoBevande.isEmpty()){
+                System.out.println("\nInserisci il nome della bevanda di cui vuoi cambiare il prezzo scegliendo tra quelli sopra indicati:");
+                bevanda = in.nextLine();
+                if(!elencoBevande.contains(bevanda))
+                    System.out.println("\nBevanda scelta non disponibile in questo stabilimento.\n");
+            }else{
+                System.out.println("In questo stabilimento non sono ancora presenti dei cibi.");
+                break;
+            }
         }while(!elencoBevande.contains(bevanda));
         return bevanda;
     }

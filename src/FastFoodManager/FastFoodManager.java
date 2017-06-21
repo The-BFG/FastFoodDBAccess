@@ -37,7 +37,7 @@ public class FastFoodManager {
         String queryMenu = "Inserisci il numero dell'operazione di visualizzazione da eseguire:\n"+
                 "1)Mostra il menu degli alimenti e il menu delle bevande di uno stabilimento;\n"+
                 "2)Mostra storico degli ordini di un cliente in ordine cronologico;\n"+
-                "3)Mostra il numero degli ordini per cliente dell'ultimo anno"+
+                "3)Mostra il numero degli ordini dell'ultimo anno per cliente;\n "+
                 "0)Torna al menu precedente.";
         String cf,nome,cognome,indirizzo,citta,mail,codiceFedeltà,fornitore,stab;
         int forni,bagni,casse;
